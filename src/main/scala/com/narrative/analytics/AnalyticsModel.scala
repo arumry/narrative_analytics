@@ -8,41 +8,44 @@ import org.squeryl.{Schema, Table}
 
 object Event extends Enumeration {
   type Interface = Value
-  val Click: Event.Value = Value(1, "Click")
-  val Impression: Event.Value = Value(2, "Impression")
+  val Click: Event.Value = Value(1, "click")
+  val Impression: Event.Value = Value(2, "impression")
 
   def isOfType(s: String): Boolean = values.exists(_.toString == s)
 }
 
 
-class Analytic(val id: Long,
-               val timestamp: Timestamp,
-               val user: String,
-               val event: Event.Interface) {
-  def this() = this(0, new Timestamp(System.currentTimeMillis()), "", Event.Click)
-}
 
-case class AnalyticAgg(uniqueUsers: Set[String], numClicks: Int, numImpressions: Int) {
+case class AnalyticAggregation(uniqueUsers: Set[String], numClicks: Int, numImpressions: Int) {
   override def toString: String = {
     val numUniqueUsers = uniqueUsers.size
     s"unique_users,$numUniqueUsers\nclicks,$numClicks\nimpressions,$numImpressions"
   }
 }
 
-object Analytic {
-  def create(analytic: Analytic): Boolean = {
+
+case class Analytic(id: Long,
+                    timestamp: Timestamp,
+                    user: String,
+                    event: Event.Interface) {
+  def this() = this(0, new Timestamp(System.currentTimeMillis()), "", Event.Click)
+}
+
+
+
+object AnalyticModel {
+  def create(analytic: Analytic): Unit = {
     inTransaction {
-      Analytics.analytics.insert(analytic)
-      true
+      AnalyticsSchema.analytics.insert(analytic)
     }
   }
 
-  def getForTheHour(start: Timestamp, end: Timestamp): AnalyticAgg = {
-    val rows = from(Analytics.analytics)(s =>
+  def getBetween(start: Timestamp, end: Timestamp): AnalyticAggregation = {
+    val rows = from(AnalyticsSchema.analytics)(s =>
       where(s.timestamp between(start, end))
         select(s.user, s.event)
     )
-    rows.toVector.foldLeft(AnalyticAgg(Set(), 0, 0))((a, r) => {
+    rows.toVector.foldLeft(AnalyticAggregation(Set(), 0, 0))((a, r) => {
       val isClick = r._2 == Event.Click
       val numClicks = if (isClick) a.numClicks + 1 else a.numClicks
       val numImpressions = if (!isClick) a.numImpressions + 1 else a.numImpressions
@@ -52,7 +55,7 @@ object Analytic {
 }
 
 
-object Analytics extends Schema {
+object AnalyticsSchema extends Schema {
   val analytics: Table[Analytic] = table[Analytic]("analytics")
   on(analytics)(s => declare(
     columns(s.timestamp) are indexed
