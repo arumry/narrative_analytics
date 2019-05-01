@@ -21,7 +21,7 @@ Endpoints:
 POST localhost:8080/analytics?timestamp={millis_since_epoch}&user={user_id}&event={click|impression}
 ```
 ```sh
-GET localhost:8080/analytics?timestamp={millis_since_epoch} to get aggregation details
+GET localhost:8080/analytics?timestamp={millis_since_epoch}
 ```
 
 ## Testing ##
