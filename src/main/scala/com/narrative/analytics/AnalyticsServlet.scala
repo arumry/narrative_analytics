@@ -2,6 +2,9 @@ package com.narrative.analytics
 
 import java.sql.Timestamp
 
+import com.narrative.analytics.dao.AnalyticModel
+import com.narrative.analytics.dto.{Analytic, Event}
+
 import scala.util.Try
 import org.scalatra._
 import org.slf4j.{Logger, LoggerFactory}
