@@ -29,11 +29,10 @@ class AnalyticsServlet extends ScalatraServlet with DBSessionSupport {
     val milli = getMilli(params.get("timestamp"))
     milli.getOrElse(halt(400, "You must provide a valid timestamp"))
 
-    val analyticAggResult = Try {
-      milli.map(x => (new Timestamp(x - MILLI_IN_HALF_HOUR), new Timestamp(x + MILLI_IN_HALF_HOUR)))
-        .map(x => AnalyticDAO.getBetween(x._1, x._2))
-        .get
-    }
+    val analyticAggResult = milli
+      .map(x => (new Timestamp(x - MILLI_IN_HALF_HOUR), new Timestamp(x + MILLI_IN_HALF_HOUR)))
+      .map(x => AnalyticDAO.getBetween(x._1, x._2))
+      .get
 
     analyticAggResult.getOrElse({
       logger.error(analyticAggResult.toString)
@@ -51,10 +50,8 @@ class AnalyticsServlet extends ScalatraServlet with DBSessionSupport {
     user.getOrElse(halt(400, "You must provide a valid user"))
     event.getOrElse(halt(400, "You must provide a valid event: click | impression"))
 
-    val result = Try {
-      val analytic = AnalyticDTO(0, timestamp.get, user.get, event.get)
-      AnalyticDAO.create(analytic)
-    }
+    val analytic = AnalyticDTO(0, timestamp.get, user.get, event.get)
+    val result = AnalyticDAO.create(analytic)
 
     result.map(_ => NoContent()).getOrElse({
       logger.error(result.toString)
