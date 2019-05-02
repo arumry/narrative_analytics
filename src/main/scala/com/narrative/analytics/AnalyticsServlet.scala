@@ -10,6 +10,7 @@ import org.scalatra._
 import org.slf4j.{Logger, LoggerFactory}
 
 class AnalyticsServlet extends ScalatraServlet with DBSessionSupport {
+  val MILLI_IN_HALF_HOUR = 1800000L
   val logger: Logger = LoggerFactory.getLogger(getClass)
 
   private def parseLong(s: String): Option[Long] = {
@@ -19,13 +20,12 @@ class AnalyticsServlet extends ScalatraServlet with DBSessionSupport {
 
   private def getMilli(t: Option[String]): Option[Long] = {
     t.flatMap(parseLong)
-      .filter(x => x > 0 && x < System.currentTimeMillis())
+      .filter(x => x > MILLI_IN_HALF_HOUR && x < System.currentTimeMillis())
   }
 
 
   get("/analytics") {
 
-    val MILLI_IN_HALF_HOUR = 1800000L
     val milli = getMilli(params.get("timestamp"))
     milli.getOrElse(halt(400, "You must provide a valid timestamp"))
 
@@ -52,7 +52,7 @@ class AnalyticsServlet extends ScalatraServlet with DBSessionSupport {
     event.getOrElse(halt(400, "You must provide a valid event: click | impression"))
 
     val result = Try {
-      val analytic = new AnalyticDTO(0, timestamp.get, user.get, event.get)
+      val analytic = AnalyticDTO(0, timestamp.get, user.get, event.get)
       AnalyticDAO.create(analytic)
     }
 
