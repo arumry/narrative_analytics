@@ -2,8 +2,8 @@ package com.narrative.analytics
 
 import java.sql.Timestamp
 
-import com.narrative.analytics.dao.AnalyticModel
-import com.narrative.analytics.dto.{Analytic, Event}
+import com.narrative.analytics.dao.{AnalyticDAO, AnalyticSchema}
+import com.narrative.analytics.dto.{AnalyticDTO, Event}
 
 import scala.util.Try
 import org.scalatra._
@@ -31,7 +31,7 @@ class AnalyticsServlet extends ScalatraServlet with DBSessionSupport {
 
     val analyticAggResult = Try {
       milli.map(x => (new Timestamp(x - MILLI_IN_HALF_HOUR), new Timestamp(x + MILLI_IN_HALF_HOUR)))
-        .map(x => AnalyticModel.getBetween(x._1, x._2))
+        .map(x => AnalyticDAO.getBetween(x._1, x._2))
         .get
     }
 
@@ -52,8 +52,8 @@ class AnalyticsServlet extends ScalatraServlet with DBSessionSupport {
     event.getOrElse(halt(400, "You must provide a valid event: click | impression"))
 
     val result = Try {
-      val analytic = new Analytic(0, timestamp.get, user.get, event.get)
-      AnalyticModel.create(analytic)
+      val analytic = new AnalyticDTO(0, timestamp.get, user.get, event.get)
+      AnalyticDAO.create(analytic)
     }
 
     result.map(_ => NoContent()).getOrElse({
@@ -64,7 +64,7 @@ class AnalyticsServlet extends ScalatraServlet with DBSessionSupport {
 
   // Here for convenience during development; would evolve table DDL separately in the future
   post("/analytics-create-db") {
-    AnalyticsSchema.create
+    AnalyticSchema.create
     Ok()
   }
 

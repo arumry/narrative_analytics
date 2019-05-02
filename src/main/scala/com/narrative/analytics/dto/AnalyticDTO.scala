@@ -2,7 +2,7 @@ package com.narrative.analytics.dto
 
 import java.sql.Timestamp
 
-case class Analytic(id: Long,
+case class AnalyticDTO(id: Long,
                     timestamp: Timestamp,
                     user: String,
                     event: Event.Interface) {
